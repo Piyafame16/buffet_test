@@ -436,14 +436,14 @@ elif section == "🚫 Task 2 – Why Actions Fail":
             fig2.update_layout(height=380)
             st.plotly_chart(fig2, use_container_width=True)
 
-        vol_by_day = mets["volume_by_day"].sort_values("day_label")
-        walk_day = df[df["is_walkaway"]].groupby("day_label").size().rename("walkaways").reset_index()
-        merged = vol_by_day.merge(walk_day, on="day_label", how="left").fillna(0)
+        # FIX: volume_by_day already has 'walkaways' from compute_metrics — no re-merge needed
+        merged = mets["volume_by_day"].sort_values("day_label").copy()
+        merged["walkaways"] = merged["walkaways"].fillna(0)
         merged["walkaway_pct"] = (merged["walkaways"] / merged["groups"] * 100).round(1)
 
         fig3 = px.scatter(
             merged, x="pax", y="walkaways",
-            text="day_label", size="walkaways",
+            text="day_label", size=merged["walkaways"].clip(lower=1),
             color="day_type", color_discrete_map=COLORS,
             title="Walk-aways vs Total Pax per Day",
             labels={"pax": "Total Pax (demand)", "walkaways": "Walk-aways (capacity signal)"},
@@ -486,7 +486,6 @@ elif section == "🚫 Task 2 – Why Actions Fail":
             st.plotly_chart(fig, use_container_width=True)
 
         with col_b:
-            # Table occupancy over time on peak day
             mon = seated[seated["day_label"] == "Mon 5 Jan"].copy()
             time_range = list(range(6*60, 12*60+1))
             occ_rows = []
@@ -515,7 +514,6 @@ elif section == "🚫 Task 2 – Why Actions Fail":
             )
             st.plotly_chart(fig2, use_container_width=True)
 
-        peak_occ = (mon.shape[0])  # rough
         st.warning(
             f"🚫 **On peak day (Mon 5 Jan), nearly all {TOTAL_TABLES} tables are full from 08:00–10:30. "
             "Queue-skipping just changes *who* waits, not *how long* the wait is. "
@@ -545,6 +543,7 @@ elif section == "⭐ Task 3 – Recommended Solution":
     # ── Impact simulation ────────────────────────────────────────
     walkin = seated[seated["Guest_type"] == "Walk In"].copy()
     walkin_over90 = walkin[walkin["meal_dur_min"] >= 90].copy()
+    walkin_over90 = walkin_over90.copy()
     walkin_over90["freed_min"] = walkin_over90["meal_dur_min"] - 90
     freed_total    = walkin_over90["freed_min"].sum()
     median_meal    = walkin["meal_dur_min"].median()
@@ -553,13 +552,12 @@ elif section == "⭐ Task 3 – Recommended Solution":
     col_a, col_b, col_c = st.columns(3)
     col_a.metric("Walk-in groups sitting >90 min", f"{len(walkin_over90)} / {len(walkin)}", "27.6%")
     col_b.metric("Table-minutes freed (5 days)",   f"{freed_total:.0f} min")
-    col_c.metric("Extra groups that could be seated", f"~{extra_seatings:.0f}")
+    col_c.metric("Extra groups that could be seated (est.)", f"~{extra_seatings:.0f}")
 
     st.divider()
     col_a2, col_b2 = st.columns(2)
 
     with col_a2:
-        # Scatter: freed minutes
         fig = px.scatter(
             walkin_over90, x="meal_dur_min", y="freed_min",
             color="day_label", size="pax", size_max=18,
@@ -571,7 +569,6 @@ elif section == "⭐ Task 3 – Recommended Solution":
         st.plotly_chart(fig, use_container_width=True)
 
     with col_b2:
-        # Before / After walk-away projection
         total_wa   = int(df["is_walkaway"].sum())
         projected  = max(0, total_wa - int(extra_seatings))
         fig2 = go.Figure(go.Bar(
@@ -623,4 +620,7 @@ elif section == "⭐ Task 3 – Recommended Solution":
     Coupling this with a **Fast Track zone for In-house guests** (2–3 dedicated tables) ensures
     hotel guests always have a guaranteed path to seating, preserving the hotel's core business
     relationship without turning away walk-in revenue entirely.
+
+    > ⚠️ *Note: The "extra ~25 groups" projection is an estimate based on total table-minutes freed
+    > divided by median meal duration. Actual impact depends on timing distribution of freed tables.*
     """)
