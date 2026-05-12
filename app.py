@@ -63,6 +63,17 @@ with st.sidebar:
     st.title("🍽️ Busy Buffet")
     st.caption("Hotel Amber 85 | Jan 2026")
     st.divider()
+
+    uploaded = st.file_uploader("Upload dataset (.xlsx)", type=["xlsx"])
+    if uploaded:
+        import tempfile, os
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx")
+        tmp.write(uploaded.read())
+        tmp.close()
+        load_path = tmp.name
+    else:
+        load_path = DATA_PATH
+
     st.divider()
     section = st.radio(
         "Navigate",
