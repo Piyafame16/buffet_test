@@ -8,11 +8,11 @@ import pandas as pd
 
 # Sheet name → (ISO date, weekday label, weekday type)
 SHEET_META = {
-    "133": ("2026-01-03", "Sat 3 Jan",  "Weekend"),
-    "143": ("2026-01-04", "Sun 4 Jan",  "Weekend"),
-    "153": ("2026-01-05", "Mon 5 Jan",  "Weekday"),
-    "173": ("2026-01-07", "Wed 7 Jan",  "Weekday"),
-    "183": ("2026-01-08", "Thu 8 Jan",  "Weekday"),
+    "133": ("2026-03-13", "Fri 13 Mar",  "Weekday"),
+    "143": ("2026-03-14", "Sat 14 Mar",  "Weekend"),
+    "153": ("2026-03-15", "Sun 15 Mar",  "Weekend"),
+    "173": ("2026-03-17", "Mon 17 Mar",  "Weekday"),
+    "183": ("2026-03-18", "Tue 18 Mar",  "Weekday"),
 }
 
 INDOOR_TABLES   = {"1A","1B","2A","2B","3A","3B","4A","4B","5A","5B","6A","6B"}
